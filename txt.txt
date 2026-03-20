@@ -1,0 +1,7 @@
+Merge @motion-attestation/ and @navigator-attestation/ (multi round) running @quickjs-wasm/ while you calculate a @sha256-balloon/. Dont keep the original structures. Merge perfectely into 1 project, as concise, short, precise as possible.
+
+Combine all the files into this new passive project. Edit and change the already existing file to create such a system in a as short in code way as possible, combining all those files into 1 file.
+
+For example change the quickjs vm to be build all 10 minutes with multiple keys stored in memory and the bytecode to be encrypted and the response from that bytecode be encrypted and verified by the server.
+
+Write standard production code following current language standards, with few files to avoid clutter, clear structure, self-documenting style, no comments, CONCISE, SHORT and readable, max 90 chars per line, no variable name abbreviation, early returns and extracted functions to keep nesting below 4, simple control flow. Use few words in your response, return mostly code.

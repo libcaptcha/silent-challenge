@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>VM Test</title>
+        <style>
+            body {
+                background: #111;
+                color: #0f0;
+                font: 14px/1.6 monospace;
+                padding: 2em;
+            }
+            pre {
+                white-space: pre-wrap;
+            }
+            button {
+                background: #0f0;
+                color: #111;
+                border: none;
+                padding: 0.5em 1.5em;
+                font: inherit;
+                cursor: pointer;
+            }
+            button:hover {
+                background: #0c0;
+            }
+        </style>
+    </head>
+    <body>
+        <pre id="log">QuickJS WASM VM - Test Page</pre>
+        <button onclick="run()">Execute Bundle</button>
+
+        <script src="vm.js"></script>
+        <script type="module">
+            import { initModule, vmInit, vmDestroy, vmExec, parseResponse } from './loader.js';
+
+            const log = document.getElementById('log');
+            function print(msg) {
+                log.textContent += '\n' + msg;
+            }
+
+            window.run = async function () {
+                try {
+                    print('[*] Loading WASM module...');
+                    await initModule('vm.wasm');
+
+                    print('[*] Initializing VM...');
+                    const rc = vmInit();
+                    if (rc !== 0) {
+                        print('[!] Init failed');
+                        return;
+                    }
+
+                    print('[*] Fetching bundle...');
+                    const resp = await fetch('test.vmbc');
+                    const bundle = new Uint8Array(await resp.arrayBuffer());
+
+                    print('[*] Executing bytecode...');
+                    const result = vmExec(bundle);
+
+                    if (!result) {
+                        print('[!] Execution failed (null response)');
+                    } else {
+                        const parsed = parseResponse(result);
+                        if (parsed) {
+                            print('[+] Response received:');
+                            print(
+                                '    Nonce: ' +
+                                    Array.from(parsed.nonce)
+                                        .map((b) => b.toString(16).padStart(2, '0'))
+                                        .join('')
+                            );
+                            print('    CT length: ' + parsed.ciphertext.length);
+                            print(
+                                '    MAC: ' +
+                                    Array.from(parsed.mac)
+                                        .map((b) => b.toString(16).padStart(2, '0'))
+                                        .join('')
+                            );
+                        } else {
+                            print('[!] Invalid response format');
+                        }
+                    }
+
+                    vmDestroy();
+                    print('[*] Done.');
+                } catch (e) {
+                    print('[!] Error: ' + e.message);
+                }
+            };
+        </script>
+    </body>
+</html>

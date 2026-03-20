@@ -1,0 +1,58 @@
+{
+    "name": "silent-challenge",
+    "version": "1.0.0",
+    "description": "Passive captcha combining motion attestation, navigator attestation, and proof-of-work",
+    "type": "module",
+    "main": "./src/index.js",
+    "types": "./src/index.d.ts",
+    "jsdelivr": "./src/index.js",
+    "unpkg": "./src/index.js",
+    "exports": {
+        ".": {
+            "types": "./src/index.d.ts",
+            "default": "./src/index.js"
+        },
+        "./challenge": {
+            "types": "./src/challenge.d.ts",
+            "default": "./src/challenge.js"
+        },
+        "./server": {
+            "types": "./src/server.d.ts",
+            "default": "./src/server.js"
+        },
+        "./client": {
+            "types": "./src/client.d.ts",
+            "default": "./src/client.js"
+        }
+    },
+    "files": [
+        "src/"
+    ],
+    "scripts": {
+        "test": "node --test test/*.test.js",
+        "start": "node example/server.js"
+    },
+    "keywords": [
+        "captcha",
+        "passive",
+        "attestation",
+        "proof-of-work",
+        "bot-detection",
+        "silent"
+    ],
+    "license": "MIT",
+    "engines": {
+        "node": ">=18"
+    },
+    "peerDependencies": {
+        "express": ">=4"
+    },
+    "peerDependenciesMeta": {
+        "express": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "express": "^4.21.0"
+    }
+}
