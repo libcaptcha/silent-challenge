@@ -1,9 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createChallengeManager } from '../src/challenge.js';
-import {
-    balloon, countLeadingZeroBitsBytes,
-} from '../src/crypto.js';
+import { balloon, countLeadingZeroBitsBytes } from '../src/crypto.js';
 
 const SECRET = 'a'.repeat(64);
 const LOW_POW = { difficulty: 1, spaceCost: 16, timeCost: 1 };
@@ -20,10 +18,7 @@ function makeManager(overrides = {}) {
 function findNonce(prefix, spaceCost, timeCost, difficulty) {
     const delta = 3;
     for (let nonce = 0; nonce < 100_000; nonce++) {
-        const hash = balloon(
-            prefix + nonce.toString(),
-            spaceCost, timeCost, delta,
-        );
+        const hash = balloon(prefix + nonce.toString(), spaceCost, timeCost, delta);
         if (countLeadingZeroBitsBytes(hash) >= difficulty) {
             return nonce;
         }
@@ -47,23 +42,20 @@ function humanMotion() {
             0.3 + Math.random() * 0.4,
             0.4 + Math.random() * 0.2,
             60 + Math.random() * 80,
-            200, 40, 1000 + i * 2000,
+            200,
+            40,
+            1000 + i * 2000,
         ]);
     }
 
     const keys = [];
     for (let i = 0; i < 20; i++) {
-        keys.push([
-            40 + Math.random() * 60,
-            80 + Math.random() * 120,
-        ]);
+        keys.push([40 + Math.random() * 60, 80 + Math.random() * 120]);
     }
 
     const scrolls = [];
     for (let i = 0; i < 10; i++) {
-        scrolls.push([
-            i * 100, -50 + Math.random() * 20, i * 500,
-        ]);
+        scrolls.push([i * 100, -50 + Math.random() * 20, i * 500]);
     }
 
     const events = [];
@@ -74,10 +66,20 @@ function humanMotion() {
     }
 
     return {
-        m: mouse, c: clicks, k: keys, s: scrolls,
-        tc: [], ac: [], gy: [], or: [],
-        ev: events, bc: [], bl: [],
-        ttfi: 500, dur: 10000, meta: {},
+        m: mouse,
+        c: clicks,
+        k: keys,
+        s: scrolls,
+        tc: [],
+        ac: [],
+        gy: [],
+        or: [],
+        ev: events,
+        bc: [],
+        bl: [],
+        ttfi: 500,
+        dur: 10000,
+        meta: {},
     };
 }
 
@@ -124,16 +126,15 @@ describe('createChallengeManager', () => {
             challenge.pow.prefix,
             challenge.pow.spaceCost,
             challenge.pow.timeCost,
-            challenge.pow.difficulty,
+            challenge.pow.difficulty
         );
 
         manager.verify(challenge.challengeId, {
-            nonce, motion: humanMotion(),
+            nonce,
+            motion: humanMotion(),
         });
 
-        const second = manager.verify(
-            challenge.challengeId, { nonce },
-        );
+        const second = manager.verify(challenge.challengeId, { nonce });
         assert.equal(second.error, 'Unknown challenge');
 
         manager.destroy();
@@ -149,13 +150,14 @@ describe('createChallengeManager', () => {
             challenge.pow.prefix,
             challenge.pow.spaceCost,
             challenge.pow.timeCost,
-            challenge.pow.difficulty,
+            challenge.pow.difficulty
         );
 
-        const result = manager.verify(
-            challenge.challengeId,
-            { nonce, motion: humanMotion(), signals: null },
-        );
+        const result = manager.verify(challenge.challengeId, {
+            nonce,
+            motion: humanMotion(),
+            signals: null,
+        });
 
         assert.equal(typeof result.score, 'number');
         assert.equal(typeof result.cleared, 'boolean');
@@ -174,13 +176,10 @@ describe('createChallengeManager', () => {
             challenge.pow.prefix,
             challenge.pow.spaceCost,
             challenge.pow.timeCost,
-            challenge.pow.difficulty,
+            challenge.pow.difficulty
         );
 
-        const result = manager.verify(
-            challenge.challengeId,
-            { nonce, motion: humanMotion() },
-        );
+        const result = manager.verify(challenge.challengeId, { nonce, motion: humanMotion() });
 
         if (result.cleared) {
             assert.ok(result.token);
@@ -190,9 +189,7 @@ describe('createChallengeManager', () => {
             assert.ok(payload);
             assert.equal(payload.sub, challenge.challengeId);
             assert.equal(typeof payload.score, 'number');
-            assert.equal(
-                typeof payload.motionScore, 'number',
-            );
+            assert.equal(typeof payload.motionScore, 'number');
         }
 
         manager.destroy();
@@ -215,13 +212,10 @@ describe('createChallengeManager', () => {
             challenge.pow.prefix,
             challenge.pow.spaceCost,
             challenge.pow.timeCost,
-            challenge.pow.difficulty,
+            challenge.pow.difficulty
         );
 
-        const result = manager.verify(
-            challenge.challengeId,
-            { nonce, motion: humanMotion() },
-        );
+        const result = manager.verify(challenge.challengeId, { nonce, motion: humanMotion() });
 
         assert.ok(result.detail);
         assert.ok(result.detail.motion);
@@ -247,13 +241,10 @@ describe('createChallengeManager', () => {
             challenge.pow.prefix,
             challenge.pow.spaceCost,
             challenge.pow.timeCost,
-            challenge.pow.difficulty,
+            challenge.pow.difficulty
         );
 
-        const result = manager.verify(
-            challenge.challengeId,
-            { nonce, motion: null },
-        );
+        const result = manager.verify(challenge.challengeId, { nonce, motion: null });
 
         assert.equal(result.cleared, false);
         manager.destroy();

@@ -38,31 +38,23 @@ export function createClient(options = {}) {
     async function verify() {
         const challenge = await requestChallenge(baseUrl);
 
-        const [powResult, vmResponse, signals] =
-            await Promise.all([
-                solvePow(
-                    challenge.pow, workerUrl, onProgress,
-                ),
-                executeVm(vmUrl, challenge.vmbc),
-                collectNavigatorSignals(),
-            ]);
+        const [powResult, vmResponse, signals] = await Promise.all([
+            solvePow(challenge.pow, workerUrl, onProgress),
+            executeVm(vmUrl, challenge.vmbc),
+            collectNavigatorSignals(),
+        ]);
 
         const motionData = extractMotionData(collector);
         detach();
 
-        return submitVerification(
-            baseUrl, challenge, powResult,
-            motionData, signals, vmResponse,
-        );
+        return submitVerification(baseUrl, challenge, powResult, motionData, signals, vmResponse);
     }
 
     return { attach, detach, bind, isReady, stats, verify };
 }
 
 async function requestChallenge(baseUrl) {
-    const response = await fetch(
-        `${baseUrl}/challenge`, { method: 'POST' },
-    );
+    const response = await fetch(`${baseUrl}/challenge`, { method: 'POST' });
     if (!response.ok) {
         throw new Error('Challenge request failed');
     }
@@ -90,9 +82,7 @@ async function executeVm(vmUrl, vmbcPath) {
 
         const bundleUrl = vmbcPath || `${vmUrl}/attestation.vmbc`;
         const resp = await fetch(bundleUrl);
-        const bundle = new Uint8Array(
-            await resp.arrayBuffer(),
-        );
+        const bundle = new Uint8Array(await resp.arrayBuffer());
 
         const result = loader.vmExec(bundle);
         loader.vmDestroy();
@@ -112,10 +102,7 @@ function uint8ToBase64(bytes) {
     return btoa(binary);
 }
 
-async function submitVerification(
-    baseUrl, challenge, powResult,
-    motionData, signals, vmResponse,
-) {
+async function submitVerification(baseUrl, challenge, powResult, motionData, signals, vmResponse) {
     const body = {
         nonce: powResult.nonce,
         motion: motionData,
@@ -123,16 +110,13 @@ async function submitVerification(
         vmResponse,
     };
 
-    const response = await fetch(
-        `${baseUrl}/challenge/${challenge.challengeId}/verify`,
-        {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body),
+    const response = await fetch(`${baseUrl}/challenge/${challenge.challengeId}/verify`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
         },
-    );
+        body: JSON.stringify(body),
+    });
 
     if (!response.ok) {
         const error = await response.json();
@@ -162,9 +146,7 @@ function solvePow(challenge, workerUrl, onProgress) {
         }
 
         for (let i = 0; i < workerCount; i++) {
-            const worker = new Worker(
-                workerUrl, { type: 'module' },
-            );
+            const worker = new Worker(workerUrl, { type: 'module' });
             workers.push(worker);
 
             worker.onmessage = ({ data }) => {
@@ -174,28 +156,22 @@ function solvePow(challenge, workerUrl, onProgress) {
                     resolved = true;
                     cleanup();
                     totalHashes += data.hashes;
-                    const elapsed =
-                        performance.now() - startTime;
+                    const elapsed = performance.now() - startTime;
                     resolve({
                         nonce: data.nonce,
                         totalHashes,
                         elapsed: Math.round(elapsed),
-                        hashRate: Math.round(
-                            totalHashes / (elapsed / 1000),
-                        ),
+                        hashRate: Math.round(totalHashes / (elapsed / 1000)),
                     });
                     return;
                 }
 
                 totalHashes += data.hashes;
                 if (!onProgress) return;
-                const elapsed =
-                    performance.now() - startTime;
+                const elapsed = performance.now() - startTime;
                 onProgress({
                     hashes: totalHashes,
-                    hashRate: Math.round(
-                        totalHashes / (elapsed / 1000),
-                    ),
+                    hashRate: Math.round(totalHashes / (elapsed / 1000)),
                     workers: workerCount,
                 });
             };

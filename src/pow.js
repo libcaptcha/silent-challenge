@@ -1,7 +1,4 @@
-import {
-    hmacSha256Hex, balloon, DELTA,
-    countLeadingZeroBitsBytes,
-} from './crypto.js';
+import { hmacSha256Hex, balloon, DELTA, countLeadingZeroBitsBytes } from './crypto.js';
 
 const CHALLENGE_TTL_MS = 120_000;
 const TOKEN_TTL_MS = 3_600_000;

@@ -1,6 +1,4 @@
-import {
-    createHmac, createDecipheriv, randomBytes,
-} from 'node:crypto';
+import { createHmac, createDecipheriv, randomBytes } from 'node:crypto';
 import { readFileSync, existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { resolve } from 'node:path';
@@ -14,21 +12,15 @@ const MAX_KEY_SETS = 3;
 
 export function loadManifest(manifestPath) {
     if (!existsSync(manifestPath)) return null;
-    return JSON.parse(
-        readFileSync(manifestPath, 'utf8'),
-    );
+    return JSON.parse(readFileSync(manifestPath, 'utf8'));
 }
 
 export function createKeyRing(options = {}) {
-    const maxSets =
-        options.maxKeySets || MAX_KEY_SETS;
-    const rotationMs =
-        options.rotationMs || ROTATION_MS;
+    const maxSets = options.maxKeySets || MAX_KEY_SETS;
+    const rotationMs = options.rotationMs || ROTATION_MS;
     const buildDir = options.buildDir || null;
-    const buildCommand =
-        options.buildCommand || 'node scripts/build.js';
-    const compileCommand =
-        options.compileCommand || null;
+    const buildCommand = options.buildCommand || 'node scripts/build.js';
+    const compileCommand = options.compileCommand || null;
     const onRotate = options.onRotate || null;
     const ring = [];
     let built = false;
@@ -36,9 +28,7 @@ export function createKeyRing(options = {}) {
     if (options.keys) {
         ring.push(options.keys);
     } else if (options.manifestPath) {
-        const manifest = loadManifest(
-            options.manifestPath,
-        );
+        const manifest = loadManifest(options.manifestPath);
         if (manifest?.keys) {
             ring.push(manifest.keys);
             built = true;
@@ -56,16 +46,16 @@ export function createKeyRing(options = {}) {
         if (!buildDir) return generateKeys();
         try {
             execSync(buildCommand, {
-                cwd: buildDir, stdio: 'pipe',
+                cwd: buildDir,
+                stdio: 'pipe',
             });
             if (compileCommand) {
                 execSync(compileCommand, {
-                    cwd: buildDir, stdio: 'pipe',
+                    cwd: buildDir,
+                    stdio: 'pipe',
                 });
             }
-            const path = resolve(
-                buildDir, 'build/manifest.json',
-            );
+            const path = resolve(buildDir, 'build/manifest.json');
             const manifest = loadManifest(path);
             if (!manifest?.keys) return generateKeys();
             built = true;
@@ -94,14 +84,16 @@ export function createKeyRing(options = {}) {
     function verify(response) {
         if (!response) {
             return {
-                valid: false, error: 'No response',
+                valid: false,
+                error: 'No response',
             };
         }
         const bytes = toResponseBytes(response);
         const parsed = parseResponse(bytes);
         if (!parsed) {
             return {
-                valid: false, error: 'Malformed response',
+                valid: false,
+                error: 'Malformed response',
             };
         }
         for (let i = ring.length - 1; i >= 0; i--) {
@@ -109,7 +101,8 @@ export function createKeyRing(options = {}) {
             if (result.valid) return result;
         }
         return {
-            valid: false, error: 'No matching key',
+            valid: false,
+            error: 'No matching key',
         };
     }
 
@@ -122,8 +115,12 @@ export function createKeyRing(options = {}) {
         rebuild,
         verify,
         current,
-        get size() { return ring.length; },
-        get built() { return built; },
+        get size() {
+            return ring.length;
+        },
+        get built() {
+            return built;
+        },
         destroy: () => clearInterval(timer),
     };
 }
@@ -139,7 +136,8 @@ export function verifyVmResponse(response, manifest) {
     const parsed = parseResponse(bytes);
     if (!parsed) {
         return {
-            valid: false, error: 'Malformed response',
+            valid: false,
+            error: 'Malformed response',
         };
     }
     return tryVerify(parsed, manifest.keys);
@@ -149,22 +147,21 @@ function tryVerify(parsed, keys) {
     const signKey = Buffer.from(keys.sign, 'hex');
     if (!verifyMac(parsed.signed, parsed.mac, signKey)) {
         return {
-            valid: false, error: 'Invalid signature',
+            valid: false,
+            error: 'Invalid signature',
         };
     }
-    const encryptKey = Buffer.from(
-        keys.encrypt, 'hex',
-    );
-    const plaintext = decryptPayload(
-        parsed.ciphertext, encryptKey, parsed.nonce,
-    );
+    const encryptKey = Buffer.from(keys.encrypt, 'hex');
+    const plaintext = decryptPayload(parsed.ciphertext, encryptKey, parsed.nonce);
     try {
         return {
-            valid: true, data: JSON.parse(plaintext),
+            valid: true,
+            data: JSON.parse(plaintext),
         };
     } catch {
         return {
-            valid: false, error: 'Invalid payload',
+            valid: false,
+            error: 'Invalid payload',
         };
     }
 }
@@ -181,36 +178,24 @@ function toResponseBytes(input) {
 }
 
 function parseResponse(bytes) {
-    const minLen =
-        HEADER_LEN + NONCE_LEN + MAC_LEN + 1;
+    const minLen = HEADER_LEN + NONCE_LEN + MAC_LEN + 1;
     if (!bytes || bytes.length < minLen) return null;
     const magic = bytes.readUInt32LE(0);
     if (magic !== MAGIC_RESP) return null;
     const totalLen = bytes.readUInt32LE(4);
     if (totalLen > bytes.length) return null;
-    const nonce = bytes.subarray(
-        HEADER_LEN, HEADER_LEN + NONCE_LEN,
-    );
-    const ctLen =
-        totalLen - HEADER_LEN - NONCE_LEN - MAC_LEN;
+    const nonce = bytes.subarray(HEADER_LEN, HEADER_LEN + NONCE_LEN);
+    const ctLen = totalLen - HEADER_LEN - NONCE_LEN - MAC_LEN;
     if (ctLen < 1) return null;
     const ctStart = HEADER_LEN + NONCE_LEN;
-    const ciphertext = bytes.subarray(
-        ctStart, ctStart + ctLen,
-    );
-    const mac = bytes.subarray(
-        ctStart + ctLen, ctStart + ctLen + MAC_LEN,
-    );
-    const signed = bytes.subarray(
-        HEADER_LEN, ctStart + ctLen,
-    );
+    const ciphertext = bytes.subarray(ctStart, ctStart + ctLen);
+    const mac = bytes.subarray(ctStart + ctLen, ctStart + ctLen + MAC_LEN);
+    const signed = bytes.subarray(HEADER_LEN, ctStart + ctLen);
     return { nonce, ciphertext, mac, signed };
 }
 
 function verifyMac(data, mac, key) {
-    const expected = createHmac('sha256', key)
-        .update(data)
-        .digest();
+    const expected = createHmac('sha256', key).update(data).digest();
     return timingSafeEqual(expected, mac);
 }
 
@@ -218,18 +203,11 @@ function decryptPayload(ciphertext, key, nonce) {
     const counter = Buffer.alloc(4);
     counter.writeUInt32LE(1, 0);
     const iv = Buffer.concat([counter, nonce]);
-    const decipher = createDecipheriv(
-        'chacha20', key, iv,
-    );
-    return Buffer.concat([
-        decipher.update(ciphertext),
-        decipher.final(),
-    ]).toString('utf8');
+    const decipher = createDecipheriv('chacha20', key, iv);
+    return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
 }
 
-export function createChallengeBundle(
-    basePath, token,
-) {
+export function createChallengeBundle(basePath, token) {
     const base = readFileSync(basePath);
     const tokenBytes = Buffer.from(token, 'hex');
     const lenBuf = Buffer.alloc(4);

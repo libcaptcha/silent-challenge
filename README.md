@@ -63,10 +63,10 @@ result as the response payload:
 
 ```js
 JSON.stringify({
-  m: __motion_data__,
-  s: __navigator_signals__,
-  ts: __vm_ts(),
-  integrity: __vm_integrity()
+    m: __motion_data__,
+    s: __navigator_signals__,
+    ts: __vm_ts(),
+    integrity: __vm_integrity(),
 });
 ```
 
@@ -113,12 +113,12 @@ Reverse engineering one build does not help with the next.
 
 ## Vendors
 
-| Package                | Role                              | Usage       |
-| ---------------------- | --------------------------------- | ----------- |
-| `motion-attestation`   | Behavioral biometrics collection  | dependency  |
-| `navigator-attestation`| Browser environment fingerprinting| dependency  |
-| `sha256-balloon`       | Memory-hard proof-of-work         | dependency  |
-| `quickjs-wasm`         | Polymorphic WASM sandbox          | reference   |
+| Package                 | Role                               | Usage      |
+| ----------------------- | ---------------------------------- | ---------- |
+| `motion-attestation`    | Behavioral biometrics collection   | dependency |
+| `navigator-attestation` | Browser environment fingerprinting | dependency |
+| `sha256-balloon`        | Memory-hard proof-of-work          | dependency |
+| `quickjs-wasm`          | Polymorphic WASM sandbox           | reference  |
 
 ## Install
 
@@ -159,33 +159,33 @@ app.listen(3000);
 
 ### Routes
 
-| Method | Path                         | Description           |
-| ------ | ---------------------------- | --------------------- |
-| POST   | `/challenge`                 | Issue challenge + PoW |
-| POST   | `/challenge/:challengeId/verify` | Submit solution   |
+| Method | Path                             | Description           |
+| ------ | -------------------------------- | --------------------- |
+| POST   | `/challenge`                     | Issue challenge + PoW |
+| POST   | `/challenge/:challengeId/verify` | Submit solution       |
 
 ### Options
 
 ```js
 silentMiddleware({
-    secret: string,          // HMAC secret (auto-generated)
-    debug: boolean,          // include full analysis detail
+    secret: string, // HMAC secret (auto-generated)
+    debug: boolean, // include full analysis detail
     weights: {
-        motion: 0.40,        // behavioral biometrics weight
-        navigator: 0.35,     // environment attestation weight
-        pow: 0.25,           // proof-of-work weight
+        motion: 0.4, // behavioral biometrics weight
+        navigator: 0.35, // environment attestation weight
+        pow: 0.25, // proof-of-work weight
     },
     pow: {
-        difficulty: 10,      // leading zero bits required
-        spaceCost: 512,      // balloon memory blocks (× 32B)
-        timeCost: 1,         // balloon mixing rounds
+        difficulty: 10, // leading zero bits required
+        spaceCost: 512, // balloon memory blocks (× 32B)
+        timeCost: 1, // balloon mixing rounds
     },
     thresholds: {
-        combined: 0.50,      // minimum weighted score
-        motion: 0.30,        // minimum motion score
-        navigator: 0.30,     // minimum navigator score
+        combined: 0.5, // minimum weighted score
+        motion: 0.3, // minimum motion score
+        navigator: 0.3, // minimum navigator score
     },
-})
+});
 ```
 
 ## Browser Client

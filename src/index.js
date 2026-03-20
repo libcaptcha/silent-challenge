@@ -11,29 +11,13 @@ export { silentMiddleware } from './server.js';
 
 export { createClient } from './client.js';
 
-export {
-    loadManifest,
-    verifyVmResponse,
-    createKeyRing,
-    createChallengeBundle,
-} from './vm.js';
+export { loadManifest, verifyVmResponse, createKeyRing, createChallengeBundle } from './vm.js';
 
-export {
-    createCollector,
-    serializeInteractions,
-    deserializeInteractions,
-} from './motion.js';
+export { createCollector, serializeInteractions, deserializeInteractions } from './motion.js';
 
-export {
-    analyze,
-    classifyScore as classifyMotionScore,
-} from './motion.js';
+export { analyze, classifyScore as classifyMotionScore } from './motion.js';
 
-export {
-    collectSignals,
-    serializeSignals,
-    deserializeSignals,
-} from './navigator.js';
+export { collectSignals, serializeSignals, deserializeSignals } from './navigator.js';
 
 export {
     validateSignals,
@@ -41,10 +25,7 @@ export {
     computeCategoryScores,
 } from './navigator.js';
 
-export {
-    getFingerprint,
-    getFingerprintAsync,
-} from './fingerprint.js';
+export { getFingerprint, getFingerprintAsync } from './fingerprint.js';
 
 export {
     sha256,
@@ -56,9 +37,4 @@ export {
     balloonHex,
 } from './crypto.js';
 
-export {
-    createChallenge,
-    verifyChallenge,
-    signToken,
-    verifyToken,
-} from './pow.js';
+export { createChallenge, verifyChallenge, signToken, verifyToken } from './pow.js';

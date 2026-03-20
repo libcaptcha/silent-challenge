@@ -29,9 +29,7 @@ export function vmExec(bundleBytes) {
 
     const outLenPtr = __zuydikqo._malloc(4);
 
-    const outPtr = __zuydikqo._g_ypidheeeluui(
-        inPtr, len, outLenPtr
-    );
+    const outPtr = __zuydikqo._g_ypidheeeluui(inPtr, len, outLenPtr);
 
     __zuydikqo._free(inPtr);
 
@@ -40,56 +38,32 @@ export function vmExec(bundleBytes) {
         return null;
     }
 
-    const outLen = __zuydikqo.HEAPU8[outLenPtr]
-        | (__zuydikqo.HEAPU8[outLenPtr + 1] << 8)
-        | (__zuydikqo.HEAPU8[outLenPtr + 2] << 16)
-        | (__zuydikqo.HEAPU8[outLenPtr + 3] << 24);
+    const outLen =
+        __zuydikqo.HEAPU8[outLenPtr] |
+        (__zuydikqo.HEAPU8[outLenPtr + 1] << 8) |
+        (__zuydikqo.HEAPU8[outLenPtr + 2] << 16) |
+        (__zuydikqo.HEAPU8[outLenPtr + 3] << 24);
     __zuydikqo._free(outLenPtr);
 
     const resp = new Uint8Array(outLen);
-    resp.set(
-        __zuydikqo.HEAPU8.subarray(
-            outPtr, outPtr + outLen
-        )
-    );
+    resp.set(__zuydikqo.HEAPU8.subarray(outPtr, outPtr + outLen));
 
     __zuydikqo._g_rpoppnpgwiqz(outPtr);
     return resp;
 }
 
 export function parseResponse(resp) {
-    if (
-        !resp
-        || resp.length < 8 + m_qqxeckrn
-            + g_blhsahfr
-    )
-        return null;
+    if (!resp || resp.length < 8 + m_qqxeckrn + g_blhsahfr) return null;
 
-    const magic = resp[0]
-        | (resp[1] << 8)
-        | (resp[2] << 16)
-        | (resp[3] << 24);
+    const magic = resp[0] | (resp[1] << 8) | (resp[2] << 16) | (resp[3] << 24);
     if (magic !== m_hrajclld) return null;
 
-    const totalLen = resp[4]
-        | (resp[5] << 8)
-        | (resp[6] << 16)
-        | (resp[7] << 24);
+    const totalLen = resp[4] | (resp[5] << 8) | (resp[6] << 16) | (resp[7] << 24);
 
-    const nonce = resp.subarray(
-        8, 8 + m_qqxeckrn
-    );
-    const ctLen = totalLen - 8
-        - m_qqxeckrn - g_blhsahfr;
-    const ct = resp.subarray(
-        8 + m_qqxeckrn,
-        8 + m_qqxeckrn + ctLen
-    );
-    const mac = resp.subarray(
-        8 + m_qqxeckrn + ctLen,
-        8 + m_qqxeckrn + ctLen
-            + g_blhsahfr
-    );
+    const nonce = resp.subarray(8, 8 + m_qqxeckrn);
+    const ctLen = totalLen - 8 - m_qqxeckrn - g_blhsahfr;
+    const ct = resp.subarray(8 + m_qqxeckrn, 8 + m_qqxeckrn + ctLen);
+    const mac = resp.subarray(8 + m_qqxeckrn + ctLen, 8 + m_qqxeckrn + ctLen + g_blhsahfr);
 
     return { nonce, ciphertext: ct, mac };
 }

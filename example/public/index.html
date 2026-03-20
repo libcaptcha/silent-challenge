@@ -1,347 +1,417 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1" />
-    <title>Silent Challenge</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0 }
-        body {
-            font-family: system-ui, monospace;
-            background: #0a0a0f; color: #c8ccd0;
-            min-height: 100vh; display: flex;
-            align-items: center; justify-content: center;
-            padding: 20px;
-        }
-        .card {
-            background: #12131a; border: 1px solid #1e2028;
-            border-radius: 12px; padding: 32px;
-            max-width: 640px; width: 100%;
-        }
-        h1 { font-size: 1.4em; color: #e0e4e8; margin-bottom: 4px }
-        .sub {
-            color: #6b7280; font-size: 0.85em;
-            margin-bottom: 24px;
-        }
-        .steps { display: flex; gap: 8px; margin-bottom: 24px }
-        .step {
-            flex: 1; padding: 8px; border-radius: 6px;
-            text-align: center; font-size: 0.72em;
-            background: #1a1b24; color: #6b7280;
-            border: 1px solid #1e2028; transition: all 0.3s;
-        }
-        .step.active {
-            background: #1a2332; color: #60a5fa;
-            border-color: #2563eb;
-        }
-        .step.done {
-            background: #132217; color: #4ade80;
-            border-color: #166534;
-        }
-        .step.fail {
-            background: #2a1215; color: #f87171;
-            border-color: #991b1b;
-        }
-        button {
-            background: #2563eb; color: #fff; border: none;
-            padding: 10px 20px; border-radius: 6px;
-            cursor: pointer; font-size: 0.9em;
-        }
-        button:hover { background: #1d4ed8 }
-        button:disabled {
-            background: #374151; cursor: not-allowed;
-        }
-        .zone {
-            background: #1a1b24; border: 1px dashed #2563eb;
-            border-radius: 8px; padding: 24px; margin: 16px 0;
-            text-align: center; color: #6b7280;
-            font-size: 0.85em; min-height: 120px;
-            display: none; flex-direction: column;
-            align-items: center; justify-content: center;
-            gap: 8px;
-        }
-        .zone input {
-            background: #0d0e14; border: 1px solid #1e2028;
-            color: #c8ccd0; padding: 6px 10px;
-            border-radius: 4px; width: 80%; font-size: 0.9em;
-        }
-        .zone .row {
-            display: flex; gap: 8px; margin-top: 8px;
-        }
-        .zone button { font-size: 0.8em; padding: 6px 14px }
-        .stats {
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px; margin: 16px 0; display: none;
-        }
-        .stat {
-            background: #1a1b24; padding: 8px;
-            border-radius: 4px; text-align: center;
-        }
-        .stat .val {
-            font-size: 1.1em; color: #e0e4e8;
-            font-weight: 600;
-        }
-        .stat .lbl {
-            font-size: 0.7em; color: #6b7280;
-            margin-top: 2px;
-        }
-        .bar {
-            height: 8px; background: #1a1b24;
-            border-radius: 4px; margin: 12px 0;
-            overflow: hidden; display: none;
-        }
-        .bar .fill {
-            height: 100%; border-radius: 4px;
-            transition: width 0.5s;
-        }
-        .log {
-            margin-top: 16px; background: #0d0e14;
-            border: 1px solid #1e2028; border-radius: 6px;
-            padding: 12px; max-height: 260px;
-            overflow-y: auto; font-size: 0.78em;
-            line-height: 1.6;
-        }
-        .log div {
-            border-bottom: 1px solid #1a1b24; padding: 2px 0;
-        }
-        .log div:last-child { border: none }
-        .info { color: #60a5fa }
-        .ok { color: #4ade80 }
-        .warn { color: #fbbf24 }
-        .err { color: #f87171 }
-        .actions { margin-top: 16px; display: flex; gap: 8px }
-    </style>
-</head>
-<body>
-<div class="card">
-    <h1>Silent Challenge</h1>
-    <p class="sub">
-        Passive captcha &middot; WASM VM attestation
-        + motion + navigator + proof of work
-    </p>
-
-    <div class="steps">
-        <div class="step" id="s1">1. Challenge</div>
-        <div class="step" id="s2">2. Collect</div>
-        <div class="step" id="s3">3. VM + PoW</div>
-        <div class="step" id="s4">4. Verify</div>
-    </div>
-
-    <button id="startBtn">Start Verification</button>
-
-    <div class="zone" id="zone">
-        <p>Interact naturally &mdash; move, click,
-            type, scroll</p>
-        <input type="text" id="typeBox"
-            placeholder="Type something here..." />
-        <div class="row">
-            <button id="btnA">Button A</button>
-            <button id="btnB">Button B</button>
-            <button id="btnC">Button C</button>
-        </div>
-        <label style="display:flex;align-items:center;
-            gap:6px;margin-top:8px;cursor:pointer">
-            <input type="checkbox" id="agreeBox" />
-            I agree to the terms
-        </label>
-        <p style="margin-top:40px;font-size:0.7em;
-            color:#374151">
-            Scroll down for more content...
-        </p>
-        <div style="height:200px"></div>
-    </div>
-
-    <div class="stats" id="stats">
-        <div class="stat">
-            <div class="val" id="sMouse">0</div>
-            <div class="lbl">Mouse</div>
-        </div>
-        <div class="stat">
-            <div class="val" id="sKeys">0</div>
-            <div class="lbl">Keys</div>
-        </div>
-        <div class="stat">
-            <div class="val" id="sPow">-</div>
-            <div class="lbl">PoW H/s</div>
-        </div>
-        <div class="stat">
-            <div class="val" id="sTime">0s</div>
-            <div class="lbl">Time</div>
-        </div>
-    </div>
-
-    <div class="bar" id="scoreBar">
-        <div class="fill" id="scoreFill"></div>
-    </div>
-
-    <div class="log" id="log"></div>
-
-    <div class="actions">
-        <button id="verifyBtn" style="display:none">
-            Verify Now
-        </button>
-        <button id="protectedBtn" style="display:none">
-            Test Protected Endpoint
-        </button>
-    </div>
-</div>
-
-<script type="module">
-    import { createClient } from '/src/client.js';
-
-    const $ = (id) => document.getElementById(id);
-    let token = null;
-    let statsInterval = null;
-
-    const client = createClient({
-        vmUrl: '/vm/web',
-        workerUrl: '/src/worker.js',
-        onProgress({ hashRate }) {
-            $('sPow').textContent =
-                hashRate ? hashRate + ' H/s' : '-';
-        },
-    });
-
-    function log(message, cls = 'info') {
-        const entry = document.createElement('div');
-        entry.className = cls;
-        entry.textContent = message;
-        $('log').appendChild(entry);
-        $('log').scrollTop = $('log').scrollHeight;
-    }
-
-    function setStep(number, state) {
-        $('s' + number).className = 'step ' + state;
-    }
-
-    $('startBtn').onclick = async () => {
-        $('startBtn').disabled = true;
-        setStep(1, 'active');
-        log('Requesting challenge...');
-
-        try {
-            const collector = client.attach(document, window);
-            client.bind($('btnA'), 'button-a');
-            client.bind($('btnB'), 'button-b');
-            client.bind($('btnC'), 'button-c');
-            client.bind($('agreeBox'), 'agree-checkbox');
-
-            setStep(1, 'done');
-            setStep(2, 'active');
-            log('Collector active. Interact naturally.', 'ok');
-
-            $('zone').style.display = 'flex';
-            $('stats').style.display = 'grid';
-            $('verifyBtn').style.display = 'inline-block';
-
-            statsInterval = setInterval(() => {
-                const s = client.stats();
-                if (!s) return;
-                $('sMouse').textContent = s.mouse;
-                $('sKeys').textContent = s.keys;
-                $('sTime').textContent =
-                    (s.elapsed / 1000).toFixed(1) + 's';
-            }, 250);
-        } catch (error) {
-            log('Init failed: ' + error.message, 'err');
-            setStep(1, 'fail');
-        }
-    };
-
-    $('verifyBtn').onclick = async () => {
-        $('verifyBtn').disabled = true;
-        if (statsInterval) clearInterval(statsInterval);
-        setStep(2, 'done');
-        setStep(3, 'active');
-        log('Running VM bytecode + PoW mining...');
-
-        try {
-            const result = await client.verify();
-            setStep(3, 'done');
-
-            if (result.powHashes) {
-                log(
-                    'PoW: ' + result.powHashes
-                    + ' hashes in ' + result.powElapsed + 'ms'
-                    + ' (' + result.powHashRate + ' H/s)',
-                    'ok',
-                );
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Silent Challenge</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
             }
+            body {
+                font-family: system-ui, monospace;
+                background: #0a0a0f;
+                color: #c8ccd0;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+            .card {
+                background: #12131a;
+                border: 1px solid #1e2028;
+                border-radius: 12px;
+                padding: 32px;
+                max-width: 640px;
+                width: 100%;
+            }
+            h1 {
+                font-size: 1.4em;
+                color: #e0e4e8;
+                margin-bottom: 4px;
+            }
+            .sub {
+                color: #6b7280;
+                font-size: 0.85em;
+                margin-bottom: 24px;
+            }
+            .steps {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 24px;
+            }
+            .step {
+                flex: 1;
+                padding: 8px;
+                border-radius: 6px;
+                text-align: center;
+                font-size: 0.72em;
+                background: #1a1b24;
+                color: #6b7280;
+                border: 1px solid #1e2028;
+                transition: all 0.3s;
+            }
+            .step.active {
+                background: #1a2332;
+                color: #60a5fa;
+                border-color: #2563eb;
+            }
+            .step.done {
+                background: #132217;
+                color: #4ade80;
+                border-color: #166534;
+            }
+            .step.fail {
+                background: #2a1215;
+                color: #f87171;
+                border-color: #991b1b;
+            }
+            button {
+                background: #2563eb;
+                color: #fff;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.9em;
+            }
+            button:hover {
+                background: #1d4ed8;
+            }
+            button:disabled {
+                background: #374151;
+                cursor: not-allowed;
+            }
+            .zone {
+                background: #1a1b24;
+                border: 1px dashed #2563eb;
+                border-radius: 8px;
+                padding: 24px;
+                margin: 16px 0;
+                text-align: center;
+                color: #6b7280;
+                font-size: 0.85em;
+                min-height: 120px;
+                display: none;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+            .zone input {
+                background: #0d0e14;
+                border: 1px solid #1e2028;
+                color: #c8ccd0;
+                padding: 6px 10px;
+                border-radius: 4px;
+                width: 80%;
+                font-size: 0.9em;
+            }
+            .zone .row {
+                display: flex;
+                gap: 8px;
+                margin-top: 8px;
+            }
+            .zone button {
+                font-size: 0.8em;
+                padding: 6px 14px;
+            }
+            .stats {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+                margin: 16px 0;
+                display: none;
+            }
+            .stat {
+                background: #1a1b24;
+                padding: 8px;
+                border-radius: 4px;
+                text-align: center;
+            }
+            .stat .val {
+                font-size: 1.1em;
+                color: #e0e4e8;
+                font-weight: 600;
+            }
+            .stat .lbl {
+                font-size: 0.7em;
+                color: #6b7280;
+                margin-top: 2px;
+            }
+            .bar {
+                height: 8px;
+                background: #1a1b24;
+                border-radius: 4px;
+                margin: 12px 0;
+                overflow: hidden;
+                display: none;
+            }
+            .bar .fill {
+                height: 100%;
+                border-radius: 4px;
+                transition: width 0.5s;
+            }
+            .log {
+                margin-top: 16px;
+                background: #0d0e14;
+                border: 1px solid #1e2028;
+                border-radius: 6px;
+                padding: 12px;
+                max-height: 260px;
+                overflow-y: auto;
+                font-size: 0.78em;
+                line-height: 1.6;
+            }
+            .log div {
+                border-bottom: 1px solid #1a1b24;
+                padding: 2px 0;
+            }
+            .log div:last-child {
+                border: none;
+            }
+            .info {
+                color: #60a5fa;
+            }
+            .ok {
+                color: #4ade80;
+            }
+            .warn {
+                color: #fbbf24;
+            }
+            .err {
+                color: #f87171;
+            }
+            .actions {
+                margin-top: 16px;
+                display: flex;
+                gap: 8px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h1>Silent Challenge</h1>
+            <p class="sub">
+                Passive captcha &middot; WASM VM attestation + motion + navigator + proof of work
+            </p>
 
-            handleResult(result);
-        } catch (error) {
-            log(
-                'Verification failed: ' + error.message,
-                'err',
-            );
-            setStep(3, 'fail');
-        }
-    };
+            <div class="steps">
+                <div class="step" id="s1">1. Challenge</div>
+                <div class="step" id="s2">2. Collect</div>
+                <div class="step" id="s3">3. VM + PoW</div>
+                <div class="step" id="s4">4. Verify</div>
+            </div>
 
-    function handleResult(result) {
-        setStep(4, result.cleared ? 'done' : 'fail');
+            <button id="startBtn">Start Verification</button>
 
-        if (result.cleared) {
-            token = result.token;
-            log(
-                'CLEARED - Score: '
-                + result.score.toFixed(3),
-                'ok',
-            );
-            $('protectedBtn').style.display = 'inline-block';
-        } else {
-            log(
-                'BLOCKED - '
-                + (result.error || 'Score: '
-                + (result.score || 0).toFixed(3)),
-                'err',
-            );
-        }
+            <div class="zone" id="zone">
+                <p>Interact naturally &mdash; move, click, type, scroll</p>
+                <input type="text" id="typeBox" placeholder="Type something here..." />
+                <div class="row">
+                    <button id="btnA">Button A</button>
+                    <button id="btnB">Button B</button>
+                    <button id="btnC">Button C</button>
+                </div>
+                <label
+                    style="
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        margin-top: 8px;
+                        cursor: pointer;
+                    "
+                >
+                    <input type="checkbox" id="agreeBox" />
+                    I agree to the terms
+                </label>
+                <p style="margin-top: 40px; font-size: 0.7em; color: #374151">
+                    Scroll down for more content...
+                </p>
+                <div style="height: 200px"></div>
+            </div>
 
-        showScoreBar(result.score || 0);
+            <div class="stats" id="stats">
+                <div class="stat">
+                    <div class="val" id="sMouse">0</div>
+                    <div class="lbl">Mouse</div>
+                </div>
+                <div class="stat">
+                    <div class="val" id="sKeys">0</div>
+                    <div class="lbl">Keys</div>
+                </div>
+                <div class="stat">
+                    <div class="val" id="sPow">-</div>
+                    <div class="lbl">PoW H/s</div>
+                </div>
+                <div class="stat">
+                    <div class="val" id="sTime">0s</div>
+                    <div class="lbl">Time</div>
+                </div>
+            </div>
 
-        if (result.flags?.length > 0) {
-            log('Flags:', 'warn');
-            result.flags.forEach((f) => log('  ' + f, 'warn'));
-        }
+            <div class="bar" id="scoreBar">
+                <div class="fill" id="scoreFill"></div>
+            </div>
 
-        $('verifyBtn').style.display = 'none';
-        $('zone').style.display = 'none';
-    }
+            <div class="log" id="log"></div>
 
-    function showScoreBar(score) {
-        $('scoreBar').style.display = 'block';
-        const fill = $('scoreFill');
-        fill.style.width = score * 100 + '%';
-        if (score >= 0.5) fill.style.background = '#4ade80';
-        else if (score >= 0.3) fill.style.background = '#fbbf24';
-        else fill.style.background = '#f87171';
-    }
+            <div class="actions">
+                <button id="verifyBtn" style="display: none">Verify Now</button>
+                <button id="protectedBtn" style="display: none">Test Protected Endpoint</button>
+            </div>
+        </div>
 
-    $('protectedBtn').onclick = async () => {
-        if (!token) return;
-        log('Testing protected endpoint...');
-        try {
-            const response = await fetch('/protected', {
-                headers: {
-                    Authorization: 'Bearer ' + token,
+        <script type="module">
+            import { createClient } from '/src/client.js';
+
+            const $ = (id) => document.getElementById(id);
+            let token = null;
+            let statsInterval = null;
+
+            const client = createClient({
+                vmUrl: '/vm/web',
+                workerUrl: '/src/worker.js',
+                onProgress({ hashRate }) {
+                    $('sPow').textContent = hashRate ? hashRate + ' H/s' : '-';
                 },
             });
-            const data = await response.json();
-            if (response.ok) {
-                log(
-                    'Protected: ' + data.message
-                    + ' (score=' + data.score.toFixed(3) + ')',
-                    'ok',
-                );
-            } else {
-                log('Protected: ' + data.error, 'err');
+
+            function log(message, cls = 'info') {
+                const entry = document.createElement('div');
+                entry.className = cls;
+                entry.textContent = message;
+                $('log').appendChild(entry);
+                $('log').scrollTop = $('log').scrollHeight;
             }
-        } catch (error) {
-            log('Error: ' + error.message, 'err');
-        }
-    };
-</script>
-</body>
+
+            function setStep(number, state) {
+                $('s' + number).className = 'step ' + state;
+            }
+
+            $('startBtn').onclick = async () => {
+                $('startBtn').disabled = true;
+                setStep(1, 'active');
+                log('Requesting challenge...');
+
+                try {
+                    const collector = client.attach(document, window);
+                    client.bind($('btnA'), 'button-a');
+                    client.bind($('btnB'), 'button-b');
+                    client.bind($('btnC'), 'button-c');
+                    client.bind($('agreeBox'), 'agree-checkbox');
+
+                    setStep(1, 'done');
+                    setStep(2, 'active');
+                    log('Collector active. Interact naturally.', 'ok');
+
+                    $('zone').style.display = 'flex';
+                    $('stats').style.display = 'grid';
+                    $('verifyBtn').style.display = 'inline-block';
+
+                    statsInterval = setInterval(() => {
+                        const s = client.stats();
+                        if (!s) return;
+                        $('sMouse').textContent = s.mouse;
+                        $('sKeys').textContent = s.keys;
+                        $('sTime').textContent = (s.elapsed / 1000).toFixed(1) + 's';
+                    }, 250);
+                } catch (error) {
+                    log('Init failed: ' + error.message, 'err');
+                    setStep(1, 'fail');
+                }
+            };
+
+            $('verifyBtn').onclick = async () => {
+                $('verifyBtn').disabled = true;
+                if (statsInterval) clearInterval(statsInterval);
+                setStep(2, 'done');
+                setStep(3, 'active');
+                log('Running VM bytecode + PoW mining...');
+
+                try {
+                    const result = await client.verify();
+                    setStep(3, 'done');
+
+                    if (result.powHashes) {
+                        log(
+                            'PoW: ' +
+                                result.powHashes +
+                                ' hashes in ' +
+                                result.powElapsed +
+                                'ms' +
+                                ' (' +
+                                result.powHashRate +
+                                ' H/s)',
+                            'ok'
+                        );
+                    }
+
+                    handleResult(result);
+                } catch (error) {
+                    log('Verification failed: ' + error.message, 'err');
+                    setStep(3, 'fail');
+                }
+            };
+
+            function handleResult(result) {
+                setStep(4, result.cleared ? 'done' : 'fail');
+
+                if (result.cleared) {
+                    token = result.token;
+                    log('CLEARED - Score: ' + result.score.toFixed(3), 'ok');
+                    $('protectedBtn').style.display = 'inline-block';
+                } else {
+                    log(
+                        'BLOCKED - ' + (result.error || 'Score: ' + (result.score || 0).toFixed(3)),
+                        'err'
+                    );
+                }
+
+                showScoreBar(result.score || 0);
+
+                if (result.flags?.length > 0) {
+                    log('Flags:', 'warn');
+                    result.flags.forEach((f) => log('  ' + f, 'warn'));
+                }
+
+                $('verifyBtn').style.display = 'none';
+                $('zone').style.display = 'none';
+            }
+
+            function showScoreBar(score) {
+                $('scoreBar').style.display = 'block';
+                const fill = $('scoreFill');
+                fill.style.width = score * 100 + '%';
+                if (score >= 0.5) fill.style.background = '#4ade80';
+                else if (score >= 0.3) fill.style.background = '#fbbf24';
+                else fill.style.background = '#f87171';
+            }
+
+            $('protectedBtn').onclick = async () => {
+                if (!token) return;
+                log('Testing protected endpoint...');
+                try {
+                    const response = await fetch('/protected', {
+                        headers: {
+                            Authorization: 'Bearer ' + token,
+                        },
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        log(
+                            'Protected: ' + data.message + ' (score=' + data.score.toFixed(3) + ')',
+                            'ok'
+                        );
+                    } else {
+                        log('Protected: ' + data.error, 'err');
+                    }
+                } catch (error) {
+                    log('Error: ' + error.message, 'err');
+                }
+            };
+        </script>
+    </body>
 </html>

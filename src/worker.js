@@ -1,7 +1,4 @@
-import {
-    sha256Raw, digestToBytes, writeLE32,
-    countLeadingZeroBitsBytes,
-} from './crypto.js';
+import { sha256Raw, digestToBytes, writeLE32, countLeadingZeroBitsBytes } from './crypto.js';
 
 const REPORT_INTERVAL = 5;
 
